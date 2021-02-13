@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Unidades</title>
+  <link rel="stylesheet" href="http://apuntesmareaverde.org.es/com/estilo.css" type="text/css">
+<style type="text/css">
+#principal{
+max-width: 400px; 
+min-width: 300px;
+margin: auto; 
+}
+.pantalla{
+position: absolute; 
+left: 10px; 
+top: 10px; 
+width: 163px; 
+height: 48px;  
+font-family: sans-serif;
+text-align: right; 
+font-size: 200%;
+font-style: italic;
+
+}
+#flexible{
+   flex-wrap: wrap;
+    display:         flex;
+  
+   }
+ #flexible>#Contenedor_respuesta{
+ 
+   max-width: 300px;
+   min-width: 150px;
+   padding: 10px;
+   border: 1px solid #cccc33;
+   border-radius: 7pt;
+   background: #dddd88;
+   
+           flex: 3 1 40%;
+ 
+           order: 2;}
+#flexible > #polimetro{
+	max-width: 190px;
+
+           order: 1;
+  
+}
+.fueraEscala{
+text-align: left; 
+position: absolute; 
+left: 10px; 
+top: 10px; 
+width: 163px; 
+height: 48px;  
+
+font-family: sans-serif;
+font-size: 200%;
+font-style: italic;
+
+}
+.enunciado{
+font-size: 120%;
+}
+.bien{
+color: green;
+font-weight: bolder; 
+text-align: left; 
+
+}
+
+.mal{
+color: red;
+font-weight: bolder; 
+text-align: left; 
+}
+.boton{
+	border: 2px solid ;
+    border-radius: 5px;
+    color: gray;
+    box-shadow: 3px 3px 2px gray;
+    position: relative;
+
+}
+
+.oculto{
+visibility: hidden;
+}
+.visible{
+visibility: visible;
+}
+
+.eliminado{
+display: none;
+}
+</style>
+<script type="text/javascript">
+var angulo = 0;
+var paso = 360/18;
+var modo = '';
+var unidad;
+var medidaAlumno = '';
+var indiceModo;
+var puntos = 0;
+var intentos = 0;
+var enunciados = ['resitencia', 'intensidad en corriente continua', 'tensión en corriente continua', 'intensidad en corriente alterna', 'tensión en corriente alterna']
+
+var modos = ['OHM','DCA','DCV','ACA','ACV','HFE','TESTAR DIODOS'];
+	var pantalla = '';
+var magnitud;
+var unidad ;
+var selector = [ 'modo','maximo','multiplicador', 'unidad','precision','maximoAnterior'];
+var modoAlumno;
+var magnitudAlumno;
+var unidadAlumno ;
+var respuestaSeparada =[ 'magnitudAlumno', 'unidadAlumno'];
+var respuestaUnida = '';
+var nombreMagnitudAlumno = 'NMA';
+var oknombreMagnitudAlumno;
+var posicionAnterior=["","",""];
+var posicion =0;
+
+
+
+function normalizaCadena(cadena) {//para normalizar distintas formas de escribir una cadena
+
+cadena = cadena.toLowerCase(cadena);// pone en minúsculas
+cadena = cadena.replace('   ','');//elimina tres espacios seguidos
+cadena = cadena.replace('  ','');//elimina dos espacios seguidos
+cadena = cadena.replace(' ','');//elimina  espacios 
+while (cadena[cadena.length-1] == ' ' ||cadena[cadena.length-1] == '.'||cadena[cadena.length-1] == 's'){//elimina espacios, eses y puntos finales
+
+cadena = cadena.substr(0,cadena.length-1);
+}
+
+while (cadena[cadena.length-1] == ' ' ){//elimina espacios, iniciales
+
+cadena = cadena.substr(1,cadena.length);
+}
+return cadena;
+
+}
+
+function separaUnidadesDeMagnitud(cadena) {// separa unidades de magnitud
+var indiceFrontera = 0;
+var solucion =[ 'magnitud', 'unidad'];
+	for (i=0; i<cadena.length; i++) {
+	
+		if (cadena[i] == '0' ||
+			 cadena[i] == '1' ||
+			 cadena[i] == '2' ||
+			 cadena[i] == '3' ||
+			 cadena[i] == '4' ||
+			 cadena[i] == '5' ||
+			 cadena[i] == '6' ||
+			 cadena[i] == '7' ||
+			 cadena[i] == '8' ||
+			 cadena[i] == '9' ||
+			 cadena[i] == '.' ) {
+			 indiceFrontera = i;
+			
+		}
+		
+	}
+	
+	solucion[0] = cadena.slice(0, indiceFrontera+1);
+	solucion[1] = cadena.slice(indiceFrontera+1,cadena.length);
+	return solucion;
+}
+
+function escribeId (texto,id) {
+document.getElementById(id).innerHTML = texto;
+	
+}
+
+function escribeNombre(texto, nombre,numeroNombres){//si hay más de 10 elementos del tipo, cambiar el valor máximo del for
+	for (i=0;i<numeroNombres;i++) {
+		document.getElementsByName(nombre)[i].innerHTML = texto;
+	}
+}
+	
+function borraInput(id) {
+document.getElementById(id).value ='';
+	
+}
+
+function lee(id){//para leer el valor de un input
+return document.getElementById(id).value;
+}
+
+function clase(clase, id) {
+document.getElementById(id).setAttribute("class", clase);
+	
+}
+function contarDigitos(numero) {
+cadenaNumero = numero.toString();
+return cadenaNumero.length;
+}
+function ajustaNumeroAPantalla(numero) {
+	if (contarDigitos(numero)>6) {
+	 parteEntera = contarDigitos(Math.floor(numero));
+		return Math.round(numero* Math.pow(10,7-parteEntera))/Math.pow(10,7-parteEntera);
+	}else{
+		return numero;
+	}
+}
+
+
+function dato(menor,mayor,decimales) {
+var d = Math.round((Math.random()*(mayor-menor)+menor)*Math.pow(10,decimales))/Math.pow(10,decimales);
+return d;	
+}
+
+function redondea(numero, decimales) {
+return Math.round(numero*Math.pow(10,decimales))/Math.pow(10,decimales);
+	
+}
+
+function Selector(angulo) {
+
+
+
+
+	switch(angulo) {
+	case 0:
+	case paso*18:
+		selector = [ 'off','','', '',''];
+		return selector;
+		break;
+	case 1*paso:
+		selector = [ 'testar diodos',1500,1, 'milivoltios',''];
+		return selector;
+		break;
+	case paso*2:
+		selector = [ 'OHM',200,1, 'ohmios',0];
+		return selector;
+		break;
+	case paso*3:
+		selector = [ 'OHM',2000,1000, 'kiloohmios',200];
+		return selector;
+		break;
+	case paso*4:
+		selector = [ 'OHM',20000,1000, 'kiloohmios',2000];
+		return selector;
+		break;
+	case paso*5:
+		selector = [ 'OHM',2000000,1000000, 'megaohmios',20000];
+		return selector;
+		break;
+		
+	case paso*6:
+		selector = [ 'DCA',0.0002,0.000001, 'microamperios',0];
+		return selector;
+		break;
+	case paso*7:
+		selector = [ 'DCA',0.02,0.001, 'miliamperios',0.0002];
+		return selector;
+		break;
+	case paso*8:
+		selector = [ 'DCA',2,1, 'amperios',0.02];
+		return selector;
+		break;
+		
+		
+	case paso*9:
+		selector = [ 'DCV',0.2,0.001, 'milivoltios',0];
+		return selector;
+		break;
+	case paso*10:
+		selector = [ 'DCV',2,1, 'voltios',0.2];
+		return selector;
+		break;
+	case paso*11:
+		selector = [ 'DCV',20,1, 'voltios',2];
+		return selector;
+		break;
+		
+	case paso*12:
+		selector = [ 'ACA',0.0002,0.000001, 'microamperios',0];
+		return selector;
+		break;
+	case paso*13:
+		selector = [ 'ACA',0.02,0.001, 'miliamperios',0.0002];
+		return selector;
+		break;
+	case paso*14:
+		selector = [ 'ACA',2,1, 'amperios',0.02];
+		return selector;
+		break;
+	
+	
+		
+	case paso*15:
+		selector = [ 'ACV',20,1, 'voltios',2];
+		return selector;
+		break;
+	case paso*16:
+		selector = [ 'ACV',2,1, 'voltios',0.2];
+		return selector;
+		break;
+	case paso*17:
+		selector = [ 'ACV',0.2,0.001, 'milivoltios',0];
+		return selector;
+		break;
+		
+
+	
+			
+		
+	}
+	
+}
+
+
+function ejercicio() {
+
+
+
+
+var repetido ;
+posicion = dato(2,17,0);
+repetido = false;
+	do{posicion = dato(2,17,0);
+		
+		for (i=0;i<3;i++) {// se verifica que el modo es diferente de los anteriores tres intentos
+			if (posicionAnterior[i]==posicion) {repetido=true;
+			}
+		}
+	}while(repetido )
+	
+	for (i=0;i<2;i++) {
+		posicionAnterior[i]=posicionAnterior[i+1];
+		
+	}
+	
+	posicionAnterior[2] = posicion;
+	
+	
+
+
+	
+	
+	
+	borraInput('respuesta');
+	
+	modo = modos[indiceModo];
+	
+	switch(posicion) {
+	
+	case 2:// 200ohm
+		magnitudAMedir = 'resistencia';
+		magnitud = dato(10,200,2);
+		unidad = 'ohmios'
+		break;
+	case 3:// 2Kohm
+		magnitudAMedir = 'resistencia';
+		magnitud = dato(0.2,2,3);
+		unidad = 'kiloohmios'
+		break;
+	case 4:// 20Kohm
+		magnitudAMedir = 'resistencia';
+		magnitud = dato(2,20,2);
+		unidad = 'kiloohmios'
+		break;
+	case 5:// 2Mohm
+		magnitudAMedir = 'resistencia';
+		magnitud = dato(0.02,22,3);
+		unidad = 'megaohmios'
+		break;
+	case 6:// 200microamperios
+		magnitudAMedir = 'intensidad';
+		magnitud = dato(1,200,2);
+		unidad = 'microamperios'
+		break;
+	case 7:// 20miliamperios
+		magnitudAMedir = 'intensidad';
+		magnitud = dato(0.2,20,2);
+		unidad = 'miliamperios'
+		break;
+	case 8:// 2amperios
+		magnitudAMedir = 'intensidad';
+		magnitud = dato(0.2,2,3);
+		unidad = 'amperios'
+		break;
+	case 9:// 200milivoltios
+		magnitudAMedir = 'tensión';
+		magnitud = dato(1,200,2);
+		unidad = 'milivoltios'
+		break;
+	case 10:// 2voltios
+		magnitudAMedir = 'tensión';
+		magnitud = dato(0.2,2,3);
+		unidad = 'voltios'
+		break;
+	case 11:// 20voltios
+		magnitudAMedir = 'tensión';
+		magnitud = dato(2,20,2);
+		unidad = 'voltios'
+		break;
+	case 12:// 200microamperios
+		magnitudAMedir = 'intensidad';
+		magnitud = dato(1,200,2);
+		unidad = 'microamperios'
+		break;
+	case 13:// 20miliamperios
+		magnitudAMedir = 'intensidad';
+		magnitud = dato(0.2,20,2);
+		unidad = 'miliamperios'
+		break;
+	case 14:// 2amperios
+		magnitudAMedir = 'intensidad';
+		magnitud = dato(0.2,2,3);
+		unidad = 'amperios'
+		break;	
+		
+	case 17:// 200milivoltios
+		magnitudAMedir = 'tensión';
+		magnitud = dato(1,200,2);
+		unidad = 'milivoltios'
+		break;
+	case 16:// 2voltios
+		magnitudAMedir = 'tensión';
+		magnitud = dato(0.2,2,3);
+		unidad = 'voltios'
+		break;
+	case 15:// 20voltios
+		magnitudAMedir = 'tensión';
+		magnitud = dato(2,20,2);
+		unidad = 'voltios'
+		break;	
+	
+		
+	}
+	//document.getElementById('Pantalla').innerHTML =magnitud;// descomentar para ver el valor de la magnitud en la pantalla
+	girarSelector(posicion);
+clase( 'visible', 'comprobar');
+clase( 'oculto','nuevo');
+clase( 'oculto','ok');
+	}
+	
+	
+function girarSelector(posición){
+
+	angulo = posicion * 360/18;
+	
+	document.getElementById('selector').style.transform = 'rotate('+angulo+'deg)'; 
+	medidaAlumno = Selector(angulo);
+
+	
+	
+	
+	}
+	
+function comprobar() {
+intentos = intentos +1;
+modoAlumno = selector[0];
+
+
+
+
+unidadAlumno = lee('respuesta');
+unidadAlumno = normalizaCadena(unidadAlumno);
+
+unidad = normalizaCadena(unidad);
+
+var okUnidad = (unidad == unidadAlumno);
+
+
+
+
+if ( okUnidad ) {
+puntos = puntos + 1;
+escribeId('Lo has hecho bien', 'ok')
+clase('bien', 'ok');
+clase( 'eliminado', 'comprobar');
+clase( 'visible','nuevo');
+	
+}	else {
+mensaje = ' No es correcto. Inténtalo de nuevo';
+
+escribeId(mensaje, 'ok');
+clase('mal', 'ok');
+
+}
+
+escribeId('Llevas '+ puntos + ' puntos de '+ intentos +' intentos', 'puntos');
+}	
+
+</script>
+
+
+</head>
+<body onload="ejercicio()"  >
+<div id="principal">
+<h1>Polímetro</h1>
+<h2>Ejercicios de unidades</h2>
+
+
+
+
+
+<div id="flexible" name="contenedor_flexible">
+<div id="polimetro"style="position: relative;"  alt="">
+
+<div id="Pantalla" class="pantalla"></div>
+<img src="base3.png" width="189" height="289" alt="">
+
+<img id="selector" style="position: absolute; left: 47px; top: 94px; " src="selector3.png" >
+
+<div  style="position: relative;" >
+
+
+</div>
+
+</div>
+
+
+<div id="Contenedor_respuesta"   >
+<p>Introduce la unidad  que corresponde a la posición del selector escrita sin abreviaturas</p>
+
+<p><input type="text" id="respuesta" value="valor" size="10"></p>
+
+<p><input id="comprobar"  value="comprobar" type="submit" onclick="comprobar()">
+<input id="nuevo"  value="nuevo ejercicio" class="oculto" type="submit" onclick="ejercicio()">
+</p>
+</div>
+</div>
+<div>
+
+
+<p id="ok"></p>
+<p id="puntos" class="bien"></p>
+</div>
+<footer>
+<hr>
+
+<p>Autor: Santiago Camblor</p>
+
+<p>Todos nuestros materiales tienen licencia creative commons que permite el uso y modificación del material siempre que no sea con fines comerciales, se cite la autoría y se mantenga el mismo tipo de licencia en las modificaciones de la obra.</p>
+<table  width="50%" align="center">
+<tr>
+<td><img src="http://apuntesmareaverde.org.es/com/Marea_Verde2.png" alt=""></td>
+<td><img src="http://apuntesmareaverde.org.es/com/cc.png" alt="" ></td>
+</tr>
+</table>
+</footer></div>
+</body>
+</html>

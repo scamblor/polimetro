@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Medidas</title>
+  <link rel="stylesheet" href="http://apuntesmareaverde.org.es/com/estilo.css" type="text/css">
+<style type="text/css">
+.pantalla{
+position: absolute; 
+left: 10px; 
+top: 10px; 
+width: 163px; 
+height: 48px;  
+font-family: sans-serif;
+text-align: right; 
+font-size: 200%;
+font-style: italic;
+
+}
+#flexible{
+   flex-wrap: wrap;
+    display:         flex;
+  
+   }
+#flexible > #Contenedor_respuesta{
+   min-width: 300px;
+   max-width: 450px;
+   padding: 10px;
+   border: 1px solid #cccc33;
+   border-radius: 7pt;
+   background: #dddd88;
+   
+           flex: 3 1 40%;
+ 
+           order: 2;}
+#flexible > #polimetro{
+	max-width: 190px;
+
+           order: 1;
+  
+}
+.fueraEscala{
+text-align: left; 
+position: absolute; 
+left: 10px; 
+top: 10px; 
+width: 163px; 
+height: 48px;  
+
+font-family: sans-serif;
+font-size: 200%;
+font-style: italic;
+
+}
+.enunciado{
+font-size: 120%;
+}
+.bien{
+color: green;
+font-weight: bolder; 
+text-align: left; 
+
+}
+
+.mal{
+color: red;
+font-weight: bolder; 
+text-align: left; 
+}
+.boton{
+	border: 2px solid ;
+    border-radius: 5px;
+    color: gray;
+    box-shadow: 3px 3px 2px gray;
+    position: relative;
+
+}
+
+.oculto{
+visibility: hidden;
+}
+.visible{
+visibility: visible;
+}
+
+.eliminado{
+display: none;
+}
+</style>
+<script type="text/javascript">
+var angulo = 0;
+var paso = 360/18;
+var modo = '';
+var unidad;
+var medidaAlumno = '';
+var indiceModo;
+var puntos = 0;
+var intentos = 0;
+var enunciados = ['resitencia', 'intensidad en corriente continua', 'tensión en corriente continua', 'intensidad en corriente alterna', 'tensión en corriente alterna']
+
+var modos = ['OHM','DCA','DCV','ACA','ACV','HFE','TESTAR DIODOS'];
+	var pantalla = '';
+var magnitud;
+var unidad ;
+var selector = [ 'modo','maximo','multiplicador', 'unidad','precision','maximoAnterior'];
+var modoAlumno;
+var magnitudAlumno;
+var unidadAlumno ;
+var respuestaSeparada =[ 'magnitudAlumno', 'unidadAlumno'];
+var respuestaUnida = '';
+var nombreMagnitudAlumno = 'NMA';
+var oknombreMagnitudAlumno;
+function normalizaCadena(cadena) {//para normalizar distintas formas de escribir una cadena
+
+
+
+
+
+cadena = cadena.replace('mA','miliamperios');
+cadena = cadena.replace('mV','milivoltios');
+cadena = cadena.replace('u','micro');
+cadena = cadena.replace('µ','micro');
+cadena = cadena.replace('Ω','ohmios');
+cadena = cadena.replace('K','kilo');
+cadena = cadena.replace('M','mega');
+cadena = cadena.replace('V','voltios');
+cadena = cadena.replace('A','amperios');
+cadena = cadena.toLowerCase(cadena);// pone en minúsculas
+cadena = cadena.replace('   ','');//elimina tres espacios seguidos
+cadena = cadena.replace('  ','');//elimina dos espacios seguidos
+cadena = cadena.replace(' ','');//elimina  espacios 
+while (cadena[cadena.length-1] == ' ' ||cadena[cadena.length-1] == '.'||cadena[cadena.length-1] == 's'){//elimina espacios, eses y puntos finales
+
+cadena = cadena.substr(0,cadena.length-1);
+}
+
+while (cadena[cadena.length-1] == ' ' ){//elimina espacios, iniciales
+
+cadena = cadena.substr(1,cadena.length);
+}
+return cadena;
+
+}
+
+function separaUnidadesDeMagnitud(cadena) {// separa unidades de magnitud
+var indiceFrontera = 0;
+var solucion =[ 'magnitud', 'unidad'];
+	for (i=0; i<cadena.length; i++) {
+	
+		if (cadena[i] == '0' ||
+			 cadena[i] == '1' ||
+			 cadena[i] == '2' ||
+			 cadena[i] == '3' ||
+			 cadena[i] == '4' ||
+			 cadena[i] == '5' ||
+			 cadena[i] == '6' ||
+			 cadena[i] == '7' ||
+			 cadena[i] == '8' ||
+			 cadena[i] == '9' ||
+			 cadena[i] == '.' ) {
+			 indiceFrontera = i;
+			
+		}
+		
+	}
+	
+	solucion[0] = cadena.slice(0, indiceFrontera+1);
+	solucion[1] = cadena.slice(indiceFrontera+1,cadena.length);
+	return solucion;
+}
+
+function escribeId (texto,id) {
+document.getElementById(id).innerHTML = texto;
+	
+}
+
+function escribeNombre(texto, nombre,numeroNombres){//si hay más de 10 elementos del tipo, cambiar el valor máximo del for
+	for (i=0;i<numeroNombres;i++) {
+		document.getElementsByName(nombre)[i].innerHTML = texto;
+	}
+}
+	
+function borraInput(id) {
+document.getElementById(id).value ='';
+	
+}
+
+function lee(id){//para leer el valor de un input
+return document.getElementById(id).value;
+}
+
+function clase(clase, id) {
+document.getElementById(id).setAttribute("class", clase);
+	
+}
+function contarDigitos(numero) {
+cadenaNumero = numero.toString();
+return cadenaNumero.length;
+}
+function ajustaNumeroAPantalla(numero) {
+	if (contarDigitos(numero)>6) {
+	 parteEntera = contarDigitos(Math.floor(numero));
+		return Math.round(numero* Math.pow(10,7-parteEntera))/Math.pow(10,7-parteEntera);
+	}else{
+		return numero;
+	}
+}
+
+
+function dato(menor,mayor,decimales) {
+var d = Math.round((Math.random()*(mayor-menor)+menor)*Math.pow(10,decimales))/Math.pow(10,decimales);
+return d;	
+}
+
+function redondea(numero, decimales) {
+return Math.round(numero*Math.pow(10,decimales))/Math.pow(10,decimales);
+	
+}
+
+function Selector(angulo) {
+
+
+
+
+	switch(angulo) {
+	case 0:
+	case paso*18:
+		selector = [ 'off','','', '',''];
+		return selector;
+		break;
+	case 1*paso:
+		selector = [ 'testar diodos',1500,1, 'milivoltios',''];
+		return selector;
+		break;
+	case paso*2:
+		selector = [ 'OHM',200,1, 'ohmios',0];
+		return selector;
+		break;
+	case paso*3:
+		selector = [ 'OHM',2000,1000, 'kiloohmios',200];
+		return selector;
+		break;
+	case paso*4:
+		selector = [ 'OHM',20000,1000, 'kiloohmios',2000];
+		return selector;
+		break;
+	case paso*5:
+		selector = [ 'OHM',2000000,1000000, 'megaohmios',20000];
+		return selector;
+		break;
+		
+	case paso*6:
+		selector = [ 'DCA',0.0002,0.000001, 'microamperios',0];
+		return selector;
+		break;
+	case paso*7:
+		selector = [ 'DCA',0.02,0.001, 'miliamperios',0.0002];
+		return selector;
+		break;
+	case paso*8:
+		selector = [ 'DCA',2,1, 'amperios',0.02];
+		return selector;
+		break;
+		
+		
+	case paso*9:
+		selector = [ 'DCV',0.2,0.001, 'milivoltios',0];
+		return selector;
+		break;
+	case paso*10:
+		selector = [ 'DCV',2,1, 'voltios',0.2];
+		return selector;
+		break;
+	case paso*11:
+		selector = [ 'DCV',20,1, 'voltios',2];
+		return selector;
+		break;
+		
+	case paso*12:
+		selector = [ 'ACA',0.0002,0.000001, 'microamperios',0];
+		return selector;
+		break;
+	case paso*13:
+		selector = [ 'ACA',0.02,0.001, 'miliamperios',0.0002];
+		return selector;
+		break;
+	case paso*14:
+		selector = [ 'ACA',2,1, 'amperios',0.02];
+		return selector;
+		break;
+	
+	
+		
+	case paso*15:
+		selector = [ 'ACV',20,1, 'voltios',2];
+		return selector;
+		break;
+	case paso*16:
+		selector = [ 'ACV',2,1, 'voltios',0.2];
+		return selector;
+		break;
+	case paso*17:
+		selector = [ 'ACV',0.2,0.001, 'milivoltios',0];
+		return selector;
+		break;
+		
+
+	
+			
+		
+	}
+	
+}
+
+
+function ejercicio() {
+	indiceModo = dato(0, enunciados.length-1,0)
+	enunciado = enunciados[indiceModo];
+	
+	escribeId('','Pantalla');
+	borraInput('respuesta');
+	
+	modo = modos[indiceModo];
+	
+	switch(modo) {
+	
+	case 'OHM':
+		magnitudAMedir = 'resistencia';
+		magnitud = dato(0.01,2,6)*Math.pow(10,dato(0,6,0));
+		unidad = 'ohmio'
+		break;
+	case 'DCV':
+		magnitudAMedir = 'tensión en corriente continua';
+		magnitud = dato(0.1,20,6)/Math.pow(10,dato(0,4,0));
+		unidad = 'voltio'
+		break;
+	case 'ACV':
+		magnitudAMedir = 'tensión en corriente alterna';
+		magnitud = dato(0.1,20,6)/Math.pow(10,dato(0,4,0));
+		unidad = 'voltio'
+		break;	
+	case 'DCA':
+		magnitudAMedir = 'intensidad en corriente continua';
+		magnitud = dato(0.1,2,6)/Math.pow(10,dato(0,6,0));
+		unidad = 'amperio';
+		break;
+	case 'ACA':
+	 	magnitudAMedir = 'intensidad en corriente alterna';
+		magnitud = dato(0.1,2,6)/Math.pow(10,dato(0,6,0));
+		unidad = 'amperio'
+		break;	
+	
+		
+	}
+	angulo = 0;
+	girarSelector();
+clase( 'visible', 'comprobar');
+clase( 'oculto','nuevo');
+
+	
+	for (i=0;i<5;i++) {
+
+document.getElementsByName('nombreMagnitudAlumno')[i].checked = false;
+}
+	
+	
+	
+	
+	}
+	
+	
+function girarSelector(direccion){
+
+	if(direccion == '1'){angulo = angulo + 360/18;}
+	if(direccion == '2'){angulo = angulo - 360/18;}
+	if (angulo < 0){ angulo = 360 + angulo;}
+	if (angulo > 360) { angulo = angulo%360;}
+	document.getElementById('selector').style.transform = 'rotate('+angulo+'deg)'; 
+	medidaAlumno = Selector(angulo);
+
+	
+	
+	if (modo == medidaAlumno[0]) {
+		if (magnitud > medidaAlumno[1]) {
+		
+		pantalla = 1;
+		escribeId(pantalla, 'Pantalla');
+		clase('fueraEscala','Pantalla');
+		
+			
+		}else {
+		
+			pantalla = magnitud/medidaAlumno[2];
+			
+			pantalla = redondea(pantalla,3);
+			
+			pantalla = ajustaNumeroAPantalla(pantalla);
+			
+			escribeId(pantalla, 'Pantalla');
+		clase('pantalla','Pantalla');
+		}
+	
+		
+	}else {
+		if (medidaAlumno[0] =='OHM') {
+		pantalla = 1;
+		escribeId(pantalla, 'Pantalla');
+		clase('fueraEscala','Pantalla');
+			
+		}else {
+			pantalla = 0;
+			clase('pantalla','Pantalla');
+		}
+		
+		
+	}
+	
+	if (medidaAlumno[0] == 'off') {pantalla = '';}
+	escribeId(pantalla,'Pantalla');
+	
+	
+	}
+	
+function comprobar() {
+intentos = intentos +1;
+modoAlumno = selector[0];
+//comprobamos la magnitud puesta por el alumno
+for (i=0;i<5;i++) {
+
+if(document.getElementsByName('nombreMagnitudAlumno')[i].checked ){
+
+switch(i) {
+case 0:
+nombreMagnitudAlumno = "DCV";
+break;
+
+case 1:
+nombreMagnitudAlumno = "ACV";
+break;
+case 2:
+nombreMagnitudAlumno = "DCA";
+break;
+case 3:
+nombreMagnitudAlumno = "ACA";
+break;
+	
+	case 4:
+nombreMagnitudAlumno = "OHM";
+break;
+	
+}
+
+}
+	
+}
+
+okNombreMagnitudAlumno = nombreMagnitudAlumno == selector[0];
+
+
+
+
+respuestaUnida = lee('respuesta');
+respuestaUnida = normalizaCadena(respuestaUnida);
+respuestaSeparada = separaUnidadesDeMagnitud(respuestaUnida);
+magnitudAlumno = respuestaSeparada[0];
+unidadAlumno = respuestaSeparada[1];
+
+var factor =1;
+if (unidadAlumno.search("kilo") != -1){// si existe kilo
+unidadAlumno = unidadAlumno.replace('kilo','');
+factor = 1000;
+}
+if (unidadAlumno.search("mega") != -1){// si existe mega
+unidadAlumno = unidadAlumno.replace('mega','');
+factor = 1000000;
+} 
+if (unidadAlumno.search("mili") != -1){// si existe mili
+unidadAlumno = unidadAlumno.replace('mili','');
+factor = 0.001;
+}
+
+if (unidadAlumno.search("micro") != -1){// si existe micro
+unidadAlumno = unidadAlumno.replace('micro','');
+factor = 0.000001;
+}
+magnitudAlumno = magnitudAlumno*factor;
+var okUnidad = (unidad == unidadAlumno);
+var okModo = (modoAlumno == modo);
+var okMagnitud = (Math.abs(magnitud-magnitudAlumno)/magnitud <0.05) // error menor de 5%
+var okEscala = magnitud > selector[4];// en el selector[4] está almacenado el máximo de la escala anterior]
+
+console.log(magnitud,' ', unidad);
+
+if (okUnidad && okMagnitud && okModo && okEscala && okNombreMagnitudAlumno) {
+puntos = puntos + 1;
+escribeId('Lo has hecho bien', 'ok')
+clase('bien', 'ok');
+clase( 'eliminado', 'comprobar');
+clase( 'visible','nuevo');
+	
+}	else {
+mensaje = ' Has cometido los siguientes errores: <ul>';
+if (!okModo){mensaje = mensaje + '<li> error en el modo</li>';}
+if (!okUnidad){mensaje = mensaje + '<li> error en las unidades</li>'; }
+if (!okMagnitud){mensaje = mensaje + '<li> error en la cantidad</li>'; }
+if (!okEscala){mensaje = mensaje + '<li> error en escala</li>'; }
+if (!okNombreMagnitudAlumno){mensaje = mensaje + '<li> error en la magnitud que estás leyendo</li>'; }
+mensaje = mensaje + '</ul> <p> Inténtalo de nuevo corrigiendo esos errores</p>';
+escribeId(mensaje, 'ok');
+clase('mal', 'ok');
+
+}
+
+escribeId('Llevas '+ puntos + ' puntos de '+ intentos +' intentos', 'puntos');
+}	
+
+</script>
+
+
+</head>
+<body onload="ejercicio()">
+
+<h1>Polímetro</h1>
+<h2>Ejercicios de medidas</h2>
+
+<ul>
+<li>Pon las unidades  y los multiplicadores escritas con todas sus letras o con sus símbolos. </li>
+
+<li>Usa un punto como separador de decimales.</li>
+</ul></div>
+<p class="enunciado"> Con este polímetro se está realizando una medida. </p>
+
+<ol>
+<li>mueve el selector para encontrar la posición adecuada</li>
+<li> indica el valor de la magnitud</li>
+<li>indica qué magnitud se está midiendo</li>
+<li>y pulsa comprobar</li>
+
+</ol>
+
+<div id="flexible" name="contenedor_flexible">
+<div id="polimetro"style="position: relative;"  alt="">
+
+<div id="Pantalla" class="pantalla"></div>
+<img src="base3.png" width="189" height="289" alt="">
+
+<img id="selector" style="position: absolute; left: 47px; top: 94px; " src="selector3.png" >
+
+<div  style="position: relative;" >
+
+<img src="izqd.png" width="38" height="43" alt="giro izquierdo"onclick="girarSelector(2)" style="position: relative; left: 40px" class="boton">
+<img src="dcha.png" width="38" height="43" alt="giro derecha" onclick="girarSelector(1)" class="boton" style="position: relative; left: 60px">
+</div>
+
+</div>
+
+<div id="Contenedor_respuesta" style="margin-left: 20px;" >
+<p>Introduce el valor medido <input type="text" id="respuesta" value="valor" size="20"></p>
+<p class="enunciado">Indica la magnitud que se está midiendo</p>
+<input type="radio" name="nombreMagnitudAlumno">Tensión en corriente continua<br>
+<input type="radio" name="nombreMagnitudAlumno">Tensión en corriente altena<br>
+<input type="radio" name="nombreMagnitudAlumno">Intensidad en corriente continua<br>
+<input type="radio" name="nombreMagnitudAlumno">Intensidad en corriente altena<br>
+<input type="radio" name="nombreMagnitudAlumno">Resistencia<br>
+
+<p><input id="comprobar"  value="comprobar" type="submit" onclick="comprobar()">
+<input id="nuevo"  value="nuevo ejercicio" type="submit" onclick="ejercicio()">
+</p>
+
+<p id="ok"></p>
+<p id="puntos" class="bien"></p>
+
+</div>
+</div>
+
+<footer>
+<hr>
+
+<p>Autor: Santiago Camblor</p>
+
+<p>Todos nuestros materiales tienen licencia creative commons que permite el uso y modificación del material siempre que no sea con fines comerciales, se cite la autoría y se mantenga el mismo tipo de licencia en las modificaciones de la obra.</p>
+<table  width="50%" align="center">
+<tr>
+<td><img src="http://apuntesmareaverde.org.es/com/Marea_Verde2.png" alt=""></td>
+<td><img src="http://apuntesmareaverde.org.es/com/cc.png" alt="" ></td>
+</tr>
+</table>
+</footer>
+</body>
+</html>

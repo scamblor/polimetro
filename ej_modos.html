@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Modos</title>
+  <link rel="stylesheet" href="http://apuntesmareaverde.org.es/com/estilo.css" type="text/css">
+<style type="text/css">
+p{
+width: 700px;
+}
+.enunciado{
+font-size: 120%;
+}
+.bien{
+color: green;
+font-weight: bolder; 
+text-align: left; 
+
+}
+
+.mal{
+color: red;
+font-weight: bolder; 
+text-align: left; 
+}
+.boton{
+	border: 2px solid ;
+    border-radius: 5px;
+    color: gray;
+    box-shadow: 3px 3px 2px gray;
+    position: relative;
+
+}
+.destacado{
+font-size: 150%;
+color: red;
+}
+.oculto{
+visibility: hidden;
+}
+.visible{
+visibility: visible;
+}
+
+.eliminado{
+display: none;
+}
+</style>
+<script type="text/javascript">
+var angulo = 0;
+var paso = 360/18;
+var modo = '';
+var modoAlumno = '';
+var indiceModo;
+var puntos = 0;
+var intentos = 0;
+var enunciados = ['resitencia', 'intensidad en corriente continua', 'tensión en corriente continua', 'intensidad en corriente alterna', 'tensión en corriente alterna']
+
+var modos = ['OHM','DCA','DCV','ACA','ACV','HFE','TESTAR DIODOS'];
+var modoAnterior=["","",""];
+function escribeId (texto,id) {
+document.getElementById(id).innerHTML = texto;
+	
+}
+
+function escribeNombre(texto, nombre,numeroNombres){//si hay más de 10 elementos del tipo, cambiar el valor máximo del for
+	for (i=0;i<numeroNombres;i++) {
+		document.getElementsByName(nombre)[i].innerHTML = texto;
+	}
+}
+	
+function borraInput(id) {
+document.getElementById(id).value ='';
+	
+}
+
+function lee(id){//para leer el valor de un input
+return document.getElementById(id).value;
+}
+
+function clase(clase, id) {
+document.getElementById(id).setAttribute("class", clase);
+	
+}
+
+function dato(menor,mayor,decimales) {
+var d = Math.round((Math.random()*(mayor-menor)+menor)*Math.pow(10,decimales))/Math.pow(10,decimales);
+return d;	
+}
+
+
+function modoSelector(angulo) {
+
+
+
+
+	switch(angulo) {
+	case 0:
+	case paso*18:
+		return 'off';
+		break;
+	case 1*paso:
+	return 'tesar diodos';
+		break;	
+	case paso*2:
+	case paso*3:
+	case paso*4:
+	case paso*5:
+		return 'OHM';
+		break;
+		
+	case paso*6:
+	case paso*7:
+	case paso*8:
+		return 'DCA';
+		break;
+		
+		
+	case paso*9:
+	case paso*10:
+	case paso*11:
+		return 'DCV';
+		break;	
+		
+	case paso*12:
+	case paso*13:
+	case paso*14:
+		return 'ACA';
+		break;
+	
+	
+		
+	case paso*15:
+	case paso*16:
+	case paso*17:
+		return 'ACV';
+		break;
+		
+
+	
+			
+		
+	}
+	
+}
+
+
+function ejercicio() {
+var repetido ;
+indiceModo = dato(0, enunciados.length-1,0);
+	do{indiceModo = dato(0, enunciados.length-1,0)
+		repetido = false;
+		for (i=0;i<3;i++) {// se verifica que el modo es diferente de los anteriores tres intentos
+			if (modoAnterior[i]==indiceModo) {repetido=true;
+			}
+		}
+	}while(repetido )
+	
+	for (i=0;i<2;i++) {
+		modoAnterior[i]=modoAnterior[i+1];
+		
+	}
+	
+	modoAnterior[2] = indiceModo;
+	
+	enunciado = enunciados[indiceModo];
+	escribeId(enunciado,'magnitud');
+	modo = modos[indiceModo];
+	document.getElementById('comprobar').setAttribute("class", 'visible');
+	document.getElementById('nuevo').setAttribute("class", 'oculto');
+	}
+	
+	
+function girarSelector(direccion){
+
+	if(direccion == '1'){angulo = angulo + 360/18;}
+	if(direccion == '2'){angulo = angulo - 360/18;}
+	if (angulo < 0){ angulo = 360 + angulo;}
+	if (angulo > 360) { angulo = angulo%360;}
+	document.getElementById('selector').style.transform = 'rotate('+angulo+'deg)'; 
+	modoAlumno = modoSelector(angulo);
+	//console.log(modoAlumno);
+	}
+	
+function comprobar() {
+intentos = intentos +1;
+if (modo == modoAlumno) {
+puntos = puntos + 1;
+escribeId('Lo has hecho bien', 'ok')
+clase('bien', 'ok');
+escribeId('Llevas '+ puntos + ' puntos de '+ intentos +' intentos', 'puntos');
+document.getElementById('comprobar').setAttribute("class", 'oculto');
+document.getElementById('nuevo').setAttribute("class", 'visible');
+}	else {
+escribeId('Lo has hecho mal', 'ok')	
+clase('mal', 'ok');
+escribeId('Llevas '+ puntos + ' puntos de '+ intentos +' intentos', 'puntos');
+}
+}	
+
+</script>
+
+
+</head>
+<body onload="ejercicio()">
+<div style=" width: 800px; ">
+
+<h1>Polimetro</h1>
+<h2>Ejercicios de modos</h2>
+<p class="enunciado" >Pon el selector en el modo adecuado para medir...
+<br> 
+<span class="destacado" id="magnitud"></span> 
+
+y pulsa comprobar</p>
+
+<div style="position: relative;"  alt="">
+<img src="base3.png" width="189" height="289" alt="">
+
+<img id="selector" style="position: absolute; left: 47px; top: 94px; " src="selector3.png" >
+
+</div>
+<div  style="position: relative;" >
+
+<img src="izqd.png" width="38" height="43" alt="giro izquierdo"onclick="girarSelector(2)" style="position: relative; left: 10px" class="boton">
+<img src="dcha.png" width="38" height="43" alt="giro derecha" onclick="girarSelector(1)" class="boton" style="position: relative; left: 100px">
+</div>
+
+
+
+
+<p><input id="comprobar"  value="comprobar" type="submit" onclick="comprobar()">
+<input id="nuevo"  value="nuevo ejercicio" type="submit" onclick="ejercicio()"></p>
+<p id="ok"></p>
+<p id="puntos" class="bien"></p>
+
+
+
+
+<footer >
+<hr>
+
+<p>Autor: Santiago Camblor</p>
+
+<p>Todos nuestros materiales tienen licencia creative commons que permite el uso y modificación del material siempre que no sea con fines comerciales, se cite la autoría y se mantenga el mismo tipo de licencia en las modificaciones de la obra.</p>
+<table  width="50%" align="center">
+<tr>
+<td><img src="http://apuntesmareaverde.org.es/com/Marea_Verde2.png" alt=""></td>
+<td><img src="http://apuntesmareaverde.org.es/com/cc.png" alt="" ></td>
+</tr>
+</table>
+</footer>
+</div>
+</body>
+</html>
