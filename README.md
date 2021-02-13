@@ -1,4 +1,4 @@
-# polimetro
+# Polimetro
 Se trata de porgramas en javascrip que simulan un polímetro.
 Hay disferentes simuladores para ejercitarse con modos, escales, lecturas, etc.
 
